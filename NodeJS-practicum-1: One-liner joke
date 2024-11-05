@@ -1,0 +1,59 @@
+Introduction to NodeJS for novice programmers
+
+By following these steps, you should be able to create a simple Node.js application that fetches and displays the random joke. 
+
+
+Installation Guide for Node.js
+
+Official Node.js website: https://nodejs.org/en 
+
+For Windows:
+1. Download Windows Installer: Get the MSI file from Node.js website, ensuring you select the right version (32-bit or 64-bit) for your OS.
+2. Begin Installation: Run the installer, accept the license agreement, select destination, customize setup if needed, then proceed to install.
+3. Verify Installation: Check if Node.js and npm are installed by running `Node --version` and `npm --version` in the command prompt.
+
+For macOS:
+1. Download macOS Installer: Get the PKG file from Node.js website. Only a 64-bit version is available.
+2. Begin Installation: Run the installer, agree to the terms, select installation location, and then install.
+3. Verify Installation: Open your macOS terminal and verify the installation by checking the Node.js and npm versions with `Node --version` and `npm --version` commands.
+
+Simple Node.js app
+
+Creating a Node.js project involves several steps, including setting up your Node.js environment, installing necessary packages, writing the code and running the application. 
+
+Here's a step-by-step guide:
+
+
+1. Initialize Your Node.js Project:
+- Create Project Directory: Make a new directory for your project (`mkdir joke`) and navigate into it (`cd joke`).
+- Initialize npm: Run `npm init` and fill in the details or use `npm init -y` for default settings. This will create a `package.json` file which manages your project dependencies.
+
+2. Install Required npm Packages:
+
+npm install one-liner-joke
+
+
+3. Create Your Application File:
+- Create a File: Make a new file in your project directory called `index.js` or any name you prefer. Add some code:
+
+javascript
+
+// index.js
+const oneLinerJoke = require('one-liner-joke');
+
+// Get a random joke
+const getRandomJoke = oneLinerJoke.getRandomJoke();
+
+// Log the joke to the console
+console.log(getRandomJoke.body);
+
+
+4. Run Your Application:
+- Execute the Script: Run your application with `node index.js` in the terminal.
+- View Results in the terminal (console).
+
+5. You will notice that this simple application has a very robus background, with many files and subfolders. Examine them, research about each part of the application and where necessary ask questions to your teacher.
+
+Seeking resources for further learning? Visit: https://github.com/DhanushNehru/Ultimate-NodeJs-Resources 
+
+-END-
