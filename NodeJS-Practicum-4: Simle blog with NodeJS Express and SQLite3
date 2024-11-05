@@ -1,0 +1,188 @@
+
+Simple blog application practicum
+
+by Amer Jaganjac
+
+Additional resources:
+https://www.sqlite.org/index.html 
+https://expressjs.com/
+https://nodejs.org/en 
+
+
+INSTRUCTIONS
+
+Creating a blog using Node.js, Express, and SQLite involves several steps. SQLite offers a lightweight, file-based database solution, which makes it an excellent choice for small to medium-sized applications like a blog. Here's a detailed guide to get you started:
+
+Prerequisites
+- Node.js installed: Ensure Node.js is installed on your machine. If not, download and install it from the official website (link above).
+- Basic knowledge of JavaScript and familiarity with Node.js and Express.
+
+
+Step 1: Initialize Node.js Project
+- Open your terminal or command prompt.
+- Create a new directory for your project and navigate into it. (e.g. mkdir myblog and then cd myblog)
+- Run `npm init -y` to create a `package.json` file with default settings.
+
+Step 2: Install Dependencies
+- Install Express, SQLite3, and EJS:
+
+  npm install express sqlite3 ejs
+
+  - `express`: web framework for Node.js.
+  - `sqlite3`: SQLite driver for Node.js.
+  - `ejs`: templating engine.
+
+Step 3: Setup Express App
+- Create a file named `app.js`.
+- Initialize Express and set EJS as the view engine:
+
+const express = require('express');
+const app = express();
+const blogRoutes = require('./routes/blogRoutes'); // Ensure this path is correct
+const db = require('./database'); // Ensure this path is correct to your database setup file
+
+app.set('view engine', 'ejs');
+app.use(express.urlencoded({ extended: true })); // Body parser for form data
+
+// Routes
+app.get('/', (req, res) => res.redirect('/blogs')); // Redirect root to the blogs
+app.use('/blogs', blogRoutes);
+
+// Database initialization (optional here if you have it in your database.js but in our example we have it so you can leave this as a comment)
+// db.run("CREATE TABLE IF NOT EXISTS posts (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, content TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)");
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+
+
+
+Step 4: Initialize SQLite Database
+- Create a new file, e.g., `database.js`.
+- Initialize SQLite and create tables for your blog:
+
+  const sqlite3 = require('sqlite3').verbose();
+  const db = new sqlite3.Database('./blog.db', (err) => {
+    if (err) {
+      console.error(err.message);
+    }
+    console.log('Connected to the SQLite database.');
+  });
+
+  db.serialize(() => {
+    db.run(`CREATE TABLE IF NOT EXISTS posts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      content TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
+  });
+
+  module.exports = db;
+ 
+
+Step 5: Create Routes
+- Create a `routes` directory.
+- Inside `routes`, create a file, e.g., `blogRoutes.js`.
+- Define routes for your blog. Here’s an example of how to structure your routes for listing posts, displaying a form to create a new post, and saving a new post:
+  
+  const express = require('express');
+  const router = express.Router();
+  const db = require('../database');
+
+  // Route to display all blog posts
+  router.get('/', (req, res) => {
+    db.all('SELECT * FROM posts ORDER BY created_at DESC', [], (err, rows) => {
+      if (err) {
+        throw err;
+      }
+      res.render('index', { posts: rows });
+    });
+  });
+
+  // Route to display the form for a new blog post
+  router.get('/new', (req, res) => {
+    res.render('new');
+  });
+
+  // Route to add a new blog post
+  router.post('/', (req, res) => {
+    const { title, content } = req.body;
+    db.run('INSERT INTO posts (title, content) VALUES (?, ?)', [title, content], (err) => {
+      if (err) {
+        throw err;
+      }
+      res.redirect('/blogs');
+    });
+  });
+
+  module.exports = router;
+
+
+
+Step 6: Create Views
+
+You will need at least two EJS templates: one for listing all blog posts (index.ejs) and one for creating a new blog post (new.ejs).
+
+index.ejs
+This template will display all blog posts:
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Blog Home</title>
+</head>
+<body>
+    <h1>All Posts</h1>
+    <a href="/blogs/new">Create New Post</a>
+    <div>
+        <% posts.forEach(post => { %>
+            <div>
+                <h2><%= post.title %></h2>
+                <p><%= post.content %></p>
+                <p>Posted on: <%= post.created_at %></p>
+            </div>
+        <% }) %>
+    </div>
+</body>
+</html>
+
+new.ejs
+This template provides a form for creating a new blog post:
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create New Post</title>
+</head>
+<body>
+    <h1>Create a New Post</h1>
+    <form action="/blogs" method="POST">
+        <label for="title">Title:</label><br>
+        <input type="text" id="title" name="title"><br>
+        <label for="content">Content:</label><br>
+        <textarea id="content" name="content"></textarea><br>
+        <button type="submit">Submit</button>
+    </form>
+    <a href="/blogs">Cancel</a>
+</body>
+</html>
+
+
+
+Step 7: Run and Test Your Application
+- Run your application using `node app.js`.
+- Visit `http://localhost:3000/blogs` in your browser to see your blog.
+
+Assignment:
+
+Extend your blog application in such a way that you have sorted blog posts according to different categories.
+Add advanced CSS styling to all user-interfaces (Bootstrap allowed)
+Create any kind of protection (for example user log-in system or some simple password protection).
+For students seeking additional challenge: deploy your application to one of the cloud hosting services. 
+
+
+
+
