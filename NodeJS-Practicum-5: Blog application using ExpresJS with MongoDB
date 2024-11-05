@@ -1,0 +1,149 @@
+Express workshop
+
+by Amer Jaganjac
+
+Workshop goal: This simple example sets up a basic Express server, connects to MongoDB Atlas, retrieves data using Mongoose, and displays it as JSON. 
+
+To demonstrate how to show data from MongoDB Atlas in a Node.js application, I will outline a simple example that retrieves documents from a collection and displays them. For this example, I'm assuming you have a MongoDB Atlas cluster set up and have the necessary connection information. If not follow the orange colored steps, if yes, follow the regular steps!
+
+To set up a MongoDB Atlas cluster and obtain the necessary connection information, follow these steps:
+
+Step 1: Sign Up for MongoDB Atlas
+Go to the MongoDB Atlas website and sign up for a new account if you don't already have one.
+Once you've signed up, log in to your MongoDB Atlas dashboard.
+Step 2: Create a New Cluster
+Click on the "Build a Cluster" button. You might have the option to create a free tier cluster, which is sufficient for development purposes.
+Choose a cloud provider and a region that best fits your needs. For the free tier, you may have limited options.
+Click on "Create Cluster" at the bottom of the page after configuring any additional options.
+Step 3: Configure Security Settings
+Create a Database User:
+
+Navigate to the "Security" section and select "Database Access."
+Click "Add New Database User."
+Choose a username and a secure password. Make sure to save these credentials as you will need them to connect to your database.
+Grant appropriate privileges; for most applications, the "Read and write to any database" privilege should suffice.
+Click "Add User" to create the user.
+Whitelist Your IP Address:
+
+Still in the "Security" section, select "Network Access."
+Click "Add IP Address."
+For security, it's best to add only your current IP address; however, for testing, you can click on "ALLOW ACCESS FROM ANYWHERE" (note that this is not recommended for production environments).
+Click "Confirm."
+Step 4: Connect to Your Cluster
+Click on "Clusters" in the left sidebar.
+In your cluster's overview, click on "CONNECT."
+Choose "Connect your application."
+Select your driver version and copy the connection string provided.
+
+REGULAR STEPS:
+
+Step 1: Set Up Your Node.js Application
+First, initialize a new Node.js project and install the required packages if you haven't done so yet:
+
+```bash
+mkdir my-atlas-app
+cd my-atlas-app
+npm init -y
+npm install express mongoose dotenv
+```
+
+Step 2: Configure Your Application to Use MongoDB Atlas
+Create an `.env` file in your project root to store your MongoDB Atlas credentials safely:
+
+```env
+MONGO_URI=your_mongodb_atlas_connection_string
+```
+
+Replace `your_mongodb_atlas_connection_string` with the actual connection string provided by MongoDB Atlas. Make sure to include your password and the database name you want to connect to.
+
+Step 3: Set Up the Express Server and Mongoose
+Create an `app.js` file and set up a simple Express server. You'll also configure Mongoose to connect to your MongoDB Atlas database.
+
+```javascript
+require('dotenv').config();
+const express = require('express');
+const mongoose = require('mongoose');
+
+const app = express();
+
+// Connect to MongoDB Atlas
+mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log('Connected to MongoDB Atlas'))
+  .catch(err => console.error('Error connecting to MongoDB Atlas', err));
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
+```
+
+Step 4: Create a Mongoose Schema and Model
+Create a `models` directory, and within it, define a Mongoose schema and model for the data you want to retrieve. For instance, if you're creating a blog, you might have a `Post` model.
+
+```bash
+mkdir models
+touch models/Post.js
+```
+
+Edit `models/Post.js`:
+
+```javascript
+const mongoose = require('mongoose');
+
+const postSchema = new mongoose.Schema({
+  title: String,
+  content: String,
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+module.exports = mongoose.model('Post', postSchema);
+```
+
+Step 5: Create Routes to Display Data
+Modify `app.js` to include routes that will use the `Post` model to fetch and display data. And a function to create some data.
+
+```javascript
+const Post = require('./models/Post'); // Import the Post model
+
+// Define a route to retrieve and display posts
+app.get('/posts', async (req, res) => {
+  try {
+    const posts = await Post.find(); // Fetch all posts from the database
+    res.json(posts); // Send the posts as a JSON response
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Example script or function to add a new post
+
+const createPost = async () => {
+  const newPost = new Post({
+    title: 'My First Blog Post',
+    content: 'This is the content of the blog post...'
+  });
+
+  try {
+    const savedPost = await newPost.save();
+    console.log(savedPost);
+  } catch (err) {
+    console.error('Error creating the post:', err);
+  }
+};
+
+```
+
+Step 6: Start Your Application
+Now you can start your Node.js application and visit `http://localhost:3000/posts` to see the data retrieved from MongoDB Atlas:
+
+```bash
+node app.js
+```
+
+When you navigate to the `/posts` route in your web browser, you should see a JSON output of all the posts stored in your MongoDB Atlas database.
+
+This simple example sets up a basic Express server, connects to MongoDB Atlas, retrieves data using Mongoose, and displays it as JSON. 
+
