@@ -1,0 +1,90 @@
+Basic Server Practicum
+
+by Amer Jaganjac
+
+Step 1: Install Node.js on Your Machine (if not already installed)
+
+1. Visit the official Node.js website (https://nodejs.org/) and download the installer suitable for your operating system.
+2. Follow the installation instructions.
+Once installed, you should be able to use `node` and `npm` from the command line.
+
+Step 2: Set Up a Basic Web Server
+
+1. Create a new directory for your project and navigate to it through command prompt:
+
+mkdir my-web-server
+cd my-web-server
+
+2. Initialize a new Node.js project by running:
+
+npm init -y
+
+3. Install the `express` framework:
+
+npm install express
+
+4. Create a new file named `server.js`:
+
+const express = require('express');
+const app = express();
+
+app.get('/', (req, res) => {
+    res.send('Welcome to the Home Page!');
+});
+
+app.listen(3000, () => {
+    console.log('Server is running on http://localhost:3000');
+});
+
+Step 3: Extend the Server for "About" and "Contact"
+
+1. In the same `server.js`, add routes for "About" and "Contact":
+
+// ... (previous code)
+
+app.get('/about', (req, res) => {
+    res.sendFile(__dirname + '/about.html');
+});
+
+app.get('/contact', (req, res) => {
+    res.sendFile(__dirname + '/contact.html');
+});
+2. Create two HTML files named `about.html` and `contact.html`:
+
+about.html:
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>About</title>
+</head>
+<body>
+    <h1>About Us</h1>
+    <p>This is the About page for our simple web server demo.</p>
+</body>
+</html>
+
+contact.html:
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Contact</title>
+</head>
+<body>
+    <h1>Contact Us</h1>
+    <p>Email us at: contact@example.com</p>
+</body>
+</html>
+
+
+Step 4: Run Your Server
+
+In the terminal, navigate to your project directory (`my-web-server`) and run:
+
+node server.js
+
+Visit `http://localhost:3000` in your browser to see the Home page. You can also navigate to `/about` and `/contact` to view the respective pages.
+
+
+Tip: Save your work in the Git and use it for your portfolio.
