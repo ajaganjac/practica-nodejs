@@ -1,0 +1,104 @@
+Pikachu AR with NodeJS
+
+by Amer Jaganjac
+
+Today we will be creating an AR solution using AR.js where users can point their phone at a marker and see a model of Pikachu appear. This project will use Node.js to serve the files locally.
+
+Prerequisites
+Basic knowledge of JavaScript and HTML.
+Node.js installed on your computer.
+A smartphone with a camera.
+
+
+Step 1: Setting Up Your Project
+
+1. Create a new directory for your project and navigate into it:
+
+   mkdir arjs-pikachu
+   cd arjs-pikachu
+
+
+2. Initialize a new Node.js project:
+
+   npm init -y
+
+
+3. Install `http-server`, a simple zero-configuration command-line http server:
+
+npm install -g serve
+
+To create a self-signed SSL certificate, you can use OpenSSL. If you don't have OpenSSL installed, you can download it from https://www.openssl.org/source/index.html . 
+
+
+
+Once installed, run the following commands in your project directory to generate your private key and certificate.
+
+Run the following commands in your project directory:
+
+openssl req -x509 -newkey rsa:2048 -nodes -sha256 -days 365 -keyout key.pem -out cert.pem
+
+You'll need to provide some details for your certificate, or you can press Enter to skip most of them for local testing.
+
+4. Add a start script to your `package.json`:
+
+   "scripts": {
+       "start": "https-server -S -C server.cert -K server.key -p 8080 .",
+   }
+
+
+Step 2: Create the HTML File
+
+1. Create an `index.html` file in your project directory:
+
+   <!DOCTYPE html>
+   <html>
+   <head>
+       <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+       <script src="https://jeromeetienne.github.io/AR.js/aframe/build/aframe-ar.js"></script>
+       <title>Pikachu AR</title>
+   </head>
+   <body style="margin: 0; overflow: hidden;">
+       <a-scene embedded arjs='sourceType: webcam; debugUIEnabled: false;'>
+           <a-marker preset="hiro">
+               <a-entity 
+                 gltf-model="url(pikachu-model.glb)" 
+                 scale="0.05 0.05 0.05"
+                 position="0 0.5 0">
+               </a-entity>
+           </a-marker>
+           <a-entity camera></a-entity>
+       </a-scene>
+   </body>
+   </html>
+
+
+Step 3: Obtain a Pikachu 3D Model
+
+1. Download a Pikachu GLB file or use any GLB model you prefer. Make sure you have the right to use it if you're planning on distributing your app.
+2. Place the `.glb` file in your project directory. (ask Amer to give you one if you don't find anything)
+
+Step 4: The AR Marker
+
+1. Download the Hiro marker from the AR.js GitHub page https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg
+
+2. Print the marker or display it on another screen.
+
+Step 5: Running Your Server
+
+1. Start your server:
+
+With your SSL certificate ready and serve installed, you can start your server using the following command in your project directory:
+
+
+serve -l 8080 -s . --ssl-cert cert.pem --ssl-key key.pem
+
+
+2. Open your smartphone's browser and navigate to `http://<your-computer-ip>:8080`. This IP should be the local network IP of your computer where the server is running.
+
+Step 6: Testing the AR Experience
+
+1. Point your phone’s camera at the Hiro marker.
+2. See Pikachu appear on the marker in augmented reality.
+
+
+
