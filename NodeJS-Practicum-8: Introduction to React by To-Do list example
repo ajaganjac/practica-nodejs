@@ -1,0 +1,262 @@
+Introduction to React by example of To-Do List
+
+by Amer Jaganjac
+
+To successfully complete the "To-Do List" React app, you would need the following prerequisites:
+
+Node.js and npm: These are required to set up and run the React application. Ensure you have both Node.js and its package manager, npm, installed. You can check this by running following commands in your command prompt:
+
+   node -v
+   npm -v
+
+
+Step 1: Set Up a New React App
+
+First, you need to set up a new React app using Create React App:
+
+npx create-react-app todo-list
+cd todo-list
+
+FAQ moment:
+
+If you have npm version 5.2.0 or later installed on your machine, npx comes bundled with it.
+To check if you have npx available, you can run:
+
+npx -v
+
+If you get a version number, it means npx is installed and ready to use. If not, you might be on an older version of npm. In that case, updating npm will also provide you with npx:
+
+npm install -g npm
+
+This command updates npm to its latest version, and you'll have npx bundled with it.
+
+Step 2: Create a Basic Structure
+
+Inside the `src` folder, open `App.js`. We'll start by setting up a basic structure for our app:
+
+import React, { useState } from 'react';
+import './App.css';
+
+function App() {
+    return (
+        <div className="App">
+            <h1>To-Do List</h1>
+            {/* Further code will go here */}
+        </div>
+    );
+}
+
+export default App;
+
+
+Step 3: Add State for Tasks
+
+Now, let's manage our tasks using the `useState` Hook:
+
+
+const [tasks, setTasks] = useState([]);
+const [newTask, setNewTask] = useState("");
+
+
+Step 4: Implement Add Task Function
+
+Here, we'll handle the input change and the button click to add a new task:
+
+function handleInputChange(e) {
+    setNewTask(e.target.value);
+}
+
+function addTask() {
+    if (newTask.trim() !== "") {
+        const newTaskItem = { id: Date.now(), text: newTask, completed: false };
+        setTasks([...tasks, newTaskItem]);
+        setNewTask("");
+    }
+}
+
+
+Step 5: Mark Task as Complete
+
+This function will update the "completed" status of a task:
+
+function toggleCompletion(id) {
+    const updatedTasks = tasks.map(task => {
+        if (task.id === id) {
+            return { ...task, completed: !task.completed };
+        }
+        return task;
+    });
+    setTasks(updatedTasks);
+}
+
+
+Step 6: Filter Tasks
+
+
+const [filter, setFilter] = useState("all");  // all, active, completed
+
+
+Based on the filter, get a filtered list:
+
+
+const filteredTasks = tasks.filter(task => {
+    if (filter === "active") return !task.completed;
+    if (filter === "completed") return task.completed;
+    return true;
+});
+
+
+Step 7: Complete UI
+
+Now, let's implement the user interface:
+
+
+return (
+    <div className="App">
+        <h1>To-Do List</h1>
+
+        <input 
+            type="text" 
+            value={newTask} 
+            onChange={handleInputChange}
+            placeholder="Add a new task..." 
+        />
+        <button onClick={addTask}>Add</button>
+
+        <ul>
+            {filteredTasks.map(task => (
+                <li key={task.id}>
+                    <input 
+                        type="checkbox" 
+                        checked={task.completed}
+                        onChange={() => toggleCompletion(task.id)}
+                    />
+                    {task.text}
+                </li>
+            ))}
+        </ul>
+
+        <div>
+            Filter: 
+            <button onClick={() => setFilter("all")}>All</button>
+            <button onClick={() => setFilter("active")}>Active</button>
+            <button onClick={() => setFilter("completed")}>Completed</button>
+        </div>
+    </div>
+);
+
+
+Step 8: Styling (Optional)
+
+You can add styles in the `App.css` to make your app look better. This is just a basic example; feel free to expand upon it and add more features!
+
+Now, you can run your app:
+
+npm start
+
+
+This will launch your new To-Do List app in the default browser. You can add tasks, mark them as complete, and filter between all, active, and completed tasks.
+
+Here's the complete code for the To-Do List app:
+
+File: App.js :
+
+import React, { useState } from 'react';
+import './App.css';
+
+function App() {
+    const [tasks, setTasks] = useState([]);
+    const [newTask, setNewTask] = useState("");
+    const [filter, setFilter] = useState("all");
+
+    function handleInputChange(e) {
+        setNewTask(e.target.value);
+    }
+
+    function addTask() {
+        if (newTask.trim() !== "") {
+            const newTaskItem = { id: Date.now(), text: newTask, completed: false };
+            setTasks([...tasks, newTaskItem]);
+            setNewTask("");
+        }
+    }
+
+    function toggleCompletion(id) {
+        const updatedTasks = tasks.map(task => {
+            if (task.id === id) {
+                return { ...task, completed: !task.completed };
+            }
+            return task;
+        });
+        setTasks(updatedTasks);
+    }
+
+    const filteredTasks = tasks.filter(task => {
+        if (filter === "active") return !task.completed;
+        if (filter === "completed") return task.completed;
+        return true;
+    });
+
+    return (
+        <div className="App">
+            <h1>To-Do List</h1>
+            <input type="text" value={newTask} onChange={handleInputChange} placeholder="Add a new task..." />
+            <button onClick={addTask}>Add</button>
+            <ul>
+                {filteredTasks.map(task => (
+                    <li key={task.id}>
+                        <input type="checkbox" checked={task.completed} onChange={() => toggleCompletion(task.id)} />
+                        {task.text}
+                    </li>
+                ))}
+            </ul>
+            <div>
+                Filter:
+                <button onClick={() => setFilter("all")}>All</button>
+                <button onClick={() => setFilter("active")}>Active</button>
+                <button onClick={() => setFilter("completed")}>Completed</button>
+            </div>
+        </div>
+    );
+}
+
+export default App;
+
+And in `App.css`:
+
+
+.App {
+    font-family: Arial, sans-serif;
+    max-width: 300px;
+    margin: 50px auto;
+    padding: 20px;
+    border: 1px solid #e5e5e5;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #e5e5e5;
+    border-radius: 4px;
+}
+
+button {
+    padding: 8px 12px;
+    margin-right: 5px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+You can paste the provided code in the respective files in the React app you've created, and then run npm start to see the To-Do List app in action. You can also do your custom styling (would be nice). Tip: add your project to Git and to your portfolio!
+
