@@ -1,0 +1,233 @@
+Title: Creating your own API with data management system
+
+by Amer Jaganjac
+
+Creating an API using Node.js, Express, and SQLite3 involves several steps, including setting up your Node.js environment, creating the API endpoints, and designing the database with SQLite3. We'll walk through an example where the API manages a collection of books, each with an author name and title.
+
+Step 1: Setting Up Your Environment
+
+1. Install Node.js: Download and install Node.js (if not already there).
+2. Initialize Your Project: Create a new directory for your project and initialize it with a `package.json` file by running `npm init` in your terminal.
+
+Step 2: Install Required Packages
+In your project directory, install Express and SQLite3:
+```bash
+npm install express sqlite3
+```
+
+Step 3: Setting Up the Express Server
+
+1. Create a file named `app.js`.
+2. Set up a basic Express server:
+
+    ```javascript
+    const express = require('express');
+    const app = express();
+
+    app.use(express.json());
+
+    const port = 3000;
+    app.listen(port, () => {
+        console.log(`Server running on port ${port}`);
+    });
+    ```
+
+Step 4: Setting Up SQLite3 Database
+
+1. Create a new file for database operations, e.g., `database.js`.
+2. Initialize SQLite3 and create a books table:
+
+    ```javascript
+    const sqlite3 = require('sqlite3').verbose();
+    let db = new sqlite3.Database(':memory:', (err) => {
+        if (err) {
+            return console.error(err.message);
+        }
+        console.log('Connected to the in-memory SQLite database.');
+    });
+
+    db.run('CREATE TABLE books (id INTEGER PRIMARY KEY, title TEXT, author TEXT)', (err) => {
+        if (err) {
+            // Handle table creation error
+        } else {
+            // Table created
+        }
+    });
+    
+
+
+
+PART B: Building a Simple Frontend
+
+1. Create an HTML File
+
+Create a file named `index.html` in your project directory, and place it in the subdirectory public (create one if you don't have it already)..
+
+2. Basic HTML Structure
+
+Here's a simple HTML template with forms for adding and deleting books:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Collection API</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Book Collection Manager</h1>
+
+    <h2>Add a Book</h2>
+    <form id="addBookForm">
+        <label for="title">Title:</label><br>
+        <input type="text" id="title" name="title" required><br>
+        <label for="author">Author:</label><br>
+        <input type="text" id="author" name="author" required><br>
+        <input type="submit" value="Add Book">
+    </form>
+
+    <h2>Delete a Book</h2>
+    <form id="deleteBookForm">
+        <label for="bookId">Book ID:</label><br>
+        <input type="number" id="bookId" name="bookId" required><br>
+        <input type="submit" value="Delete Book">
+    </form>
+
+    <script>
+        $(document).ready(function() {
+            $('#addBookForm').on('submit', function(e) {
+                e.preventDefault();
+                var title = $('#title').val();
+                var author = $('#author').val();
+
+                $.ajax({
+                    url: '/books',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ title: title, author: author }),
+                    success: function(response) {
+                        alert(response);
+                        $('#addBookForm').trigger('reset');
+                    }
+                });
+            });
+
+            $('#deleteBookForm').on('submit', function(e) {
+                e.preventDefault();
+                var bookId = $('#bookId').val();
+
+                $.ajax({
+                    url: '/books/' + bookId,
+                    method: 'DELETE',
+                    success: function(response) {
+                        alert(response);
+                        $('#deleteBookForm').trigger('reset');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+```
+
+3. Explanation of the HTML code
+
+- The HTML forms provide input fields for the book title, author, and book ID.
+- The jQuery library is used to handle form submissions and send AJAX requests to your Express API.
+- The `addBookForm` sends a POST request to `/books` with the title and author.
+- The `deleteBookForm` sends a DELETE request to `/books/{id}` with the book ID.
+
+Then modify you app.js file:
+
+const express = require('express');
+const app = express();
+const sqlite3 = require('sqlite3').verbose();
+
+
+// Middleware to parse JSON bodies
+app.use(express.json());
+// Serve static files from the 'public' directory
+app.use(express.static('public'));
+
+
+// Initialize file-based SQLite database
+const db = new sqlite3.Database('books.db', (err) => {
+   if (err) {
+       console.error(err.message);
+   } else {
+       console.log('Connected to the SQLite database.');
+       db.run('CREATE TABLE IF NOT EXISTS books (id INTEGER PRIMARY KEY, title TEXT, author TEXT)', (err) => {
+           if (err) {
+               console.error(err.message);
+           }
+       });
+   }
+});
+
+
+// API Endpoint: Add a new book
+app.post('/books', (req, res) => {
+   const { title, author } = req.body;
+   db.run(`INSERT INTO books (title, author) VALUES (?, ?)`, [title, author], function(err) {
+       if (err) {
+           res.status(400).send(`Error adding book: ${err.message}`);
+           return;
+       }
+       res.send(`A book has been added with ID ${this.lastID}`);
+   });
+});
+
+
+// API Endpoint: Get all books
+app.get('/books', (req, res) => {
+   db.all(`SELECT * FROM books`, [], (err, rows) => {
+       if (err) {
+           res.status(500).send(`Error retrieving books: ${err.message}`);
+           return;
+       }
+       res.json(rows);
+   });
+});
+
+
+// API Endpoint: Delete a book
+app.delete('/books/:id', (req, res) => {
+   const id = req.params.id;
+   db.run(`DELETE FROM books WHERE id = ?`, id, function(err) {
+       if (err) {
+           res.status(400).send(`Error deleting book: ${err.message}`);
+           return;
+       }
+       if (this.changes === 0) {
+           res.send(`No book found with ID: ${id}`);
+       } else {
+           res.send(`Book deleted with ID: ${id}`);
+       }
+   });
+});
+
+
+// Start server
+const port = 3000;
+app.listen(port, () => {
+   console.log(`Server running on port ${port}`);
+});
+
+
+
+
+
+
+5. Testing the Interface
+Run Your Server: Run `node app.js` in your terminal.
+- Open a web browser and navigate to `http://localhost:3000`.
+- Test adding and deleting books using the forms. Also check your API output with /books route.
+
+
+
+
+Challenge: Please find a way to beautify this product - make it look nice with help of the CSS.
