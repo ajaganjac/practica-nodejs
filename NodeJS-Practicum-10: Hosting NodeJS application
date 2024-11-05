@@ -1,0 +1,419 @@
+Title: Hosting JS blog online and implementing user-side components
+
+by Amer Jaganjac
+
+PART A - Getting things online
+
+There are several ways to get your advanced JS coded project online. 
+These three ways are most common ways:
+
+https://theboroer.github.io/localtunnel-www/ to share local development running server with the world, just while its running on your PC. This is good for quick shows.
+https://glitch.com/ to share your works online for free. (recommended)
+www.docker.com (for very advanced level students) 
+
+Today we will focus on Glitch. Glitch is out recommended choice because it has very easy learning curve and it is very suitable for media design students who do not want to spend many hours dealing with advanced software.
+
+Before you start, make sure that you have your entire project uploaded in the Github repository (yes, Github not Gitlab).
+
+Uploading a project or files to Glitch, a popular online platform for creating and sharing web apps, can be done through the following steps:
+
+Create a Glitch Account:
+
+Visit Glitch.com.
+Click on the “Sign Up” button to create an account. You can sign up using your email, GitHub, Facebook, or Google account.
+
+Start a New Project:
+
+Once logged in, click on the “New Project” button. This will open a menu with different project options like “hello-webpage”, “hello-express”, or “hello-sqlite”.
+Choose a project template that suits your needs. Choose the last button for import through Git:
+
+
+
+
+
+If after deploying your app seems to be glitching in a way that is restarts continuously, a tip:
+
+For Node apps, you need to have scripts start command in package.json
+
+{
+  "name": "blogsql",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ejs": "^3.1.9",
+    "express": "^4.18.2",
+    "method-override": "^3.0.0",
+    "sqlite3": "^5.1.6"
+  }
+}
+
+
+
+
+
+PART B: Getting users involved
+
+Step 1:
+
+First, install the required Node.js packages. Open your terminal, navigate to your project directory, and run:
+
+bash
+
+npm install passport passport-local bcryptjs express-session sqlite3 connect-flash
+
+
+Step 2:
+
+To add a new table to your existing SQLite3 database through the command prompt, you can follow these steps:
+
+Open SQLite3 Command Line Interface
+First, you need to access your SQLite3 database via the command line. Open your command prompt or terminal and navigate to the directory where your SQLite3 database file is located.
+
+ Access Your Database
+Use the SQLite3 command to open your database. Replace `your_database_file.db` with the name of your database file:
+
+```bash
+sqlite3 your_database_file.db
+```
+
+This command will open the SQLite3 command line interface and connect you to your database.
+
+ Create the User Table
+Once inside the SQLite3 command line interface, execute the SQL command to create your new `users` table. Here's an example command:
+
+```sql
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE,
+    email TEXT NOT NULL UNIQUE,
+    password TEXT NOT NULL
+);
+```
+
+Type or paste this command into the SQLite3 command line interface and press Enter. This will create the `users` table in your database.
+
+ Confirm Table Creation
+To make sure your table has been created, you can list all tables in the database with the following command:
+
+```sql
+.tables
+```
+
+This command should show you a list of all tables, including your newly created `users` table.
+
+ Exit SQLite3
+Once you have confirmed the creation of the table, you can exit the SQLite3 command line interface by typing:
+
+```sql
+.exit
+```
+
+
+Step 3:
+
+In your Express app, configure Passport with a local strategy:
+
+a. Create a new file for passport configuration in the root tree of your app, e.g., passport-config.js. In this file, set up your local strategy:
+
+javascript
+
+const LocalStrategy = require('passport-local').Strategy;
+const bcrypt = require('bcryptjs');
+// Your database setup
+const db = require('./database');
+
+module.exports = function(passport) {
+    passport.use(new LocalStrategy(async (username, password, done) => {
+        // Match user
+        const user = await findUserByUsername(username);
+        if (!user) {
+            return done(null, false, { message: 'That username is not registered' });
+        }
+
+        // Match password
+        bcrypt.compare(password, user.password, (err, isMatch) => {
+            if (err) throw err;
+            if (isMatch) {
+                return done(null, user);
+            } else {
+                return done(null, false, { message: 'Password incorrect' });
+            }
+        });
+    }));
+
+    passport.serializeUser((user, done) => {
+        done(null, user.id);
+    });
+
+    passport.deserializeUser((id, done) => {
+        // Your code to find user by ID
+        db.get(`SELECT * FROM users WHERE id = ?`, [id], (err, row) => {
+            done(err, row);
+        });
+    });
+};
+
+async function findUserByUsername(username) {
+    return new Promise((resolve, reject) => {
+        db.get('SELECT * FROM users WHERE username = ?', [username], (err, row) => {
+            if (err) reject(err);
+            resolve(row);
+        });
+    });
+}
+
+Step 4:
+
+In your routes directory, create one routes.js file with this code, here you will have new authentication routes and existing blog routes all together:
+
+const express = require('express');
+const bcrypt = require('bcryptjs');
+const passport = require('passport');
+const db = require('../database'); // Ensure this path is correct
+const router = express.Router();
+
+// Blog Routes
+
+// Route to display all blog posts
+router.get('/blogs', (req, res) => {
+    db.all('SELECT * FROM posts ORDER BY created_at DESC', [], (err, rows) => {
+        if (err) {
+            console.error(err);
+            res.redirect('/');
+        } else {
+            res.render('index', { posts: rows });
+        }
+    });
+});
+
+// Route to display the form for a new blog post
+router.get('/blogs/new', (req, res) => {
+    res.render('new');
+});
+
+// Route to add a new blog post
+router.post('/blogs', async (req, res) => {
+    const { title, content, category } = req.body;
+    try {
+        await db.run('INSERT INTO posts (title, content, category) VALUES (?, ?, ?)', [title, content, category]);
+        res.redirect('/blogs');
+    } catch (err) {
+        console.error(err);
+        res.render('new', { errorMessage: 'Error creating Blog' });
+    }
+});
+
+// Route to delete a blog post
+router.delete('/blogs/:id', async (req, res) => {
+    try {
+        await db.run('DELETE FROM posts WHERE id = ?', req.params.id);
+        res.redirect('/blogs');
+    } catch (err) {
+        console.error(err);
+        res.redirect('/blogs');
+    }
+});
+
+// Authentication Routes
+
+// Signup route
+router.post('/signup', async (req, res) => {
+    try {
+        const hashedPassword = await bcrypt.hash(req.body.password, 10);
+        // Add user to the database
+        const { username, email } = req.body;
+        const addUserQuery = 'INSERT INTO users (username, email, password) VALUES (?, ?, ?)';
+        await db.run(addUserQuery, [username, email, hashedPassword]);
+
+        res.redirect('/login');
+    } catch (error) {
+        console.error(error);
+        res.redirect('/signup');
+    }
+});
+
+// Login route
+router.post('/login', passport.authenticate('local', {
+    successRedirect: '/blogs',
+    failureRedirect: '/login',
+    failureFlash: true // Ensure you have flash messages configured
+}));
+
+// Logout route
+router.get('/logout', (req, res) => {
+    req.logout((err) => {
+        if (err) { 
+            console.error(err); 
+            return next(err);
+        }
+        res.redirect('/login');
+    });
+});
+
+// Route to display the login form
+router.get('/login', (req, res) => {
+    res.render('login');
+});
+
+// Route to display the signup form
+router.get('/signup', (req, res) => {
+    res.render('signup');
+});
+
+module.exports = router;
+
+
+
+
+Step 6:
+
+Adjust your app.js accordingly:
+
+const express = require('express');
+const session = require('express-session');
+const passport = require('passport');
+const flash = require('connect-flash');
+const methodOverride = require('method-override');
+
+// Passport configuration
+require('./passport-config')(passport);
+
+const app = express();
+const routes = require('./routes/routes'); // Combined routes file
+
+// Set view engine
+app.set('view engine', 'ejs');
+
+// Middlewares
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static('public'));
+app.use(methodOverride('_method'));
+
+// Express session
+app.use(session({
+    secret: 'secret',
+    resave: false,
+    saveUninitialized: false
+}));
+
+// Passport middleware
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Connect flash
+app.use(flash());
+
+// Global variables for flash messages
+app.use((req, res, next) => {
+    res.locals.success_msg = req.flash('success_msg');
+    res.locals.error_msg = req.flash('error_msg');
+    res.locals.error = req.flash('error');
+    next();
+});
+
+// Routes
+app.use('/', routes);
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, console.log(`Server started on port ${PORT}`));
+
+
+
+Step 7:
+
+You will typically place the middleware function in a separate file under the utils directory (create one) for better organization and reusability. You can name this file something like middleware.js 
+
+function checkAuthenticated(req, res, next) {
+    if (req.isAuthenticated()) {
+        return next();
+    }
+
+    res.redirect('/login');
+}
+
+// Use this middleware in routes you want to protect
+app.get('/protected-route', checkAuthenticated, (req, res) => {
+    // Protected route logic
+});
+
+
+
+Step 8: You will also need new views for the new routes that you now have:
+
+a) Login View (views/login.ejs)
+Create a form for user login. This form will POST to your /login route.
+
+html
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+</head>
+<body>
+    <form action="/login" method="POST">
+        <div>
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required>
+        </div>
+        <div>
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+        <button type="submit">Login</button>
+    </form>
+    <a href="/signup">Don't have an account? Sign up</a>
+</body>
+</html>
+
+2. Signup View (views/signup.ejs)
+Create a form for user registration. This form will POST to your /signup route.
+
+html
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Signup</title>
+</head>
+<body>
+    <form action="/signup" method="POST">
+        <div>
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required>
+        </div>
+        <div>
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+        </div>
+        <div>
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+        <button type="submit">Sign Up</button>
+    </form>
+    <a href="/login">Already have an account? Log in</a>
+</body>
+</html>
+
+3. Logout Button
+The logout button can be added to your navigation bar or a common layout file. Here's an example of how you might include it in your main layout file (views/partials/header.ejs):
+
+
+Copy code
+<nav>
+    <!-- Other navigation items -->
+    <a href="/logout">Logout</a>
+</nav>
+
+Now run node app.js and check out if everything works! If so, don't forget to update your git!
+
+Good job :) we are done for today!
